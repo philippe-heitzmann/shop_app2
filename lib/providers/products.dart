@@ -79,31 +79,29 @@ class Products with ChangeNotifier {
       FIREBASE_URL,
       '/products.json',
       filterByUser
-          ? {
+          ? <String, String>{
               'auth': authToken,
-              'orderBy': 'creatorId',
-              'equalTo': userId,
+              'orderBy': json.encode("creatorId"),
+              'equalTo': json.encode(userId),
             }
-          : {'auth': authToken},
+          : <String, String>{
+              'auth': authToken,
+            },
     );
 
     try {
       final response = await http.get(url);
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
-      print('products extracted Data $extractedData');
-      if (extractedData == null) {
-        return;
-      }
       // fetch favoriteStatus by user
       url = Uri.https('shop-app-24bba-default-rtdb.firebaseio.com',
           '/userFavorites/$userId.json', {'auth': '$authToken'});
       final favoriteResponse = await http.get(url);
       final favoriteData = json.decode(favoriteResponse.body);
-      print('favoriteStatus extracted Data $favoriteData');
       if (extractedData == null) {
         return;
       }
       final List<Product> loadedProducts = [];
+      print('extracted data: $extractedData');
       extractedData.forEach((prodId, prodData) {
         loadedProducts.add(Product(
             id: prodId,
@@ -122,7 +120,6 @@ class Products with ChangeNotifier {
   }
 
   Future<void> addProduct(Product product) async {
-    print('addProduct product $Product');
     final url = Uri.https(FIREBASE_URL, '/products.json', {'auth': authToken});
     try {
       final response = await http.post(
@@ -136,7 +133,6 @@ class Products with ChangeNotifier {
         }),
       );
       final addProductData = json.decode(response.body);
-      print(addProductData);
       final newProduct = Product(
         title: product.title,
         description: product.description,

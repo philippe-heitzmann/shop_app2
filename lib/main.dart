@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shop_app/helpers/custom_route.dart';
 
 // App code
+import './screens/splash_screen.dart';
 import 'package:shop_app/providers/auth.dart';
 import './screens/cart_screen.dart';
 import './screens/products_overview_screen.dart';
@@ -44,9 +46,10 @@ class MyApp extends StatelessWidget {
             ),
           ),
           ChangeNotifierProxyProvider<Auth, Orders>(
-            create: (_) => Orders('', []),
+            create: (_) => Orders('', '', []),
             update: (ctx, auth, previousOrders) => Orders(
               auth.token,
+              auth.userId,
               previousOrders!.orders,
             ),
           ),
@@ -61,6 +64,10 @@ class MyApp extends StatelessWidget {
                       tertiary: Colors.white,
                     ),
                 fontFamily: 'Lato',
+                pageTransitionsTheme: PageTransitionsTheme(builders: {
+                  TargetPlatform.android: CustomPageTransitionBuilder(),
+                  TargetPlatform.iOS: CustomPageTransitionBuilder(),
+                }),
                 textTheme: ThemeData.light().textTheme.copyWith(
                       bodyLarge: const TextStyle(
                           color: Color.fromRGBO(20, 51, 51, 1),
@@ -79,7 +86,16 @@ class MyApp extends StatelessWidget {
                           fontFamily: 'Lato'),
                     ),
               ),
-              home: auth.isAuth ? ProductsOverviewScreen() : AuthScreen(),
+              home: auth.isAuth
+                  ? ProductsOverviewScreen()
+                  : FutureBuilder(
+                      future: auth.tryAutoLogin(),
+                      builder: (ctx, authResultSnapshot) =>
+                          authResultSnapshot.connectionState ==
+                                  ConnectionState.waiting
+                              ? SplashScreen()
+                              : AuthScreen(),
+                    ),
               routes: {
                 ProductDetailScreen.routeName: (ctx) => ProductDetailScreen(),
                 CartScreen.routeName: (ctx) => CartScreen(),

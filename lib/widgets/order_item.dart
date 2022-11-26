@@ -14,33 +14,58 @@ class OrderItem extends StatefulWidget {
   _OrderItemState createState() => _OrderItemState();
 }
 
-class _OrderItemState extends State<OrderItem> {
+class _OrderItemState extends State<OrderItem>
+    with SingleTickerProviderStateMixin {
   var _expanded = false;
+
+  late AnimationController _controller =
+      AnimationController(vsync: this, duration: Duration(milliseconds: 300));
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(
+        milliseconds: 300,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.all(10),
-      child: Column(
-        children: <Widget>[
-          ListTile(
-            title: Text('\$${widget.order.amount}'),
-            subtitle: Text(
-              DateFormat('dd/MM/yyyy hh:mm').format(widget.order.datetime),
+    return AnimatedContainer(
+      duration: Duration(milliseconds: 300),
+      height:
+          _expanded ? min(widget.order.products.length * 20.0 + 110, 200) : 95,
+      child: Card(
+        margin: EdgeInsets.all(10),
+        child: Column(
+          children: <Widget>[
+            ListTile(
+              title: Text('\$${widget.order.amount}'),
+              subtitle: Text(
+                DateFormat('dd/MM/yyyy hh:mm').format(widget.order.datetime),
+              ),
+              trailing: IconButton(
+                icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more),
+                onPressed: () {
+                  setState(() {
+                    _expanded = !_expanded;
+                  });
+                },
+              ),
             ),
-            trailing: IconButton(
-              icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more),
-              onPressed: () {
-                setState(() {
-                  _expanded = !_expanded;
-                });
-              },
-            ),
-          ),
-          if (_expanded)
-            Container(
+            AnimatedContainer(
               padding: EdgeInsets.symmetric(horizontal: 15, vertical: 4),
-              height: min(widget.order.products.length * 20.0 + 10, 100),
+              constraints: BoxConstraints(
+                  minHeight: 0,
+                  maxHeight:
+                      min(widget.order.products.length * 20.0 + 10, 100)),
+              duration: Duration(milliseconds: 300),
+              height: _expanded
+                  ? min(widget.order.products.length * 20.0 + 10, 100)
+                  : 0,
               child: ListView(
                 children: widget.order.products
                     .map(
@@ -58,7 +83,7 @@ class _OrderItemState extends State<OrderItem> {
                             '${prod.quantity}x \$${prod.price}',
                             style: const TextStyle(
                               fontSize: 18,
-                              color: Colors.grey,
+                              color: Colors.black,
                             ),
                           )
                         ],
@@ -66,8 +91,9 @@ class _OrderItemState extends State<OrderItem> {
                     )
                     .toList(),
               ),
-            )
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
